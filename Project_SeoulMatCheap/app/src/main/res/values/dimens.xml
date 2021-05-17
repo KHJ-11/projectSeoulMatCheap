@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+    Because the window insets on round devices are larger than 15dp, this padding only applies
+    to square screens.
+    -->
+    <dimen name="box_inset_layout_padding">0dp</dimen>
+
+    <!--
+    This padding applies to both square and round screens. The total padding between the buttons
+    and the window insets is box_inset_layout_padding (above variable) on square screens and
+    inner_frame_layout_padding (below variable) on round screens.
+    -->
+    <dimen name="inner_frame_layout_padding">5dp</dimen>
+
+    <dimen name="btn_icon"> 30dp </dimen>
+    <dimen name="btn_clickiconwidth"> 60dp </dimen>
+    <dimen name="btn_clickiconheight"> 20dp </dimen>
+
+
+
+    <!--여백-->
+    <dimen name="margin_basic">16dp</dimen>
+    <dimen name="margin_basic2">24dp</dimen>
+    <dimen name="margin_basic3">20dp</dimen>
+    <dimen name="margin_basic4">10dp</dimen>
+    <dimen name="margin_basic5">12dp</dimen>
+    <dimen name="margin_height">5dp</dimen>
+    <dimen name="margin_login">100dp</dimen>
+
+    <!--그림자-->
+    <dimen name="elevation1">5dp</dimen>
+    <dimen name="elevation2">2dp</dimen>
+
+    <!--지도-->
+    <dimen name="map_button">30dp</dimen>
+    <dimen name="map_item_width">40dp</dimen>
+    <dimen name="map_item_height">5dp</dimen>
+    <dimen name="filter_distance_left">60dp</dimen>
+    <dimen name="filter_distance_right">64dp</dimen>
+    <dimen name="info_window_rotation">180</dimen>
+    <dimen name="info_window_text">11sp</dimen>
+
+    <!--텍스트메뉴버튼-->
+    <dimen name="text_menu">20sp</dimen>
+    <dimen name="text_size">16sp</dimen>
+    <dimen name="text_size2">12sp</dimen>
+    <dimen name="text_padding">3dp</dimen>
+    <dimen name="text_padding2">5dp</dimen>
+
+    <!--아이콘 크기-->
+    <dimen name="icon_width">40dp</dimen>
+    <dimen name="icon_width2">50dp</dimen>
+    <dimen name="icon_height">40dp</dimen>
+    <dimen name="icon_height2">50dp</dimen>
+    <dimen name="icon_height3">150dp</dimen>
+    <dimen name="icon_logo">250dp</dimen>
+    <dimen name="logo_height">64dp</dimen>
+    <dimen name="filter_distance">30dp</dimen>
+    <dimen name="logo_margin">100dp</dimen>
+
+    <!--텍스트 사이즈-->
+    <dimen name="text_filter_title">20sp</dimen>
+    <dimen name="text_icon">15sp</dimen>
+    <dimen name="permission_name">20dp</dimen>
+    <dimen name="permission_text">15dp</dimen>
+
+    <!--Inform_02-->
+    <dimen name="inform_image_heigh">250dp</dimen>
+    <dimen name="inform_icon_width">15dp</dimen>
+    <dimen name="inform_review_width">280dp</dimen>
+    <dimen name="inform_review_icon">10dp</dimen>
+
+</resources>
