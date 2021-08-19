@@ -1,26 +1,30 @@
 package kr.co.mapo.project_seoulmatcheap.system
 
 import android.Manifest
+import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.Application
 import android.content.Context
-import android.content.SharedPreferences
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
-import android.content.res.ColorStateList
 import android.location.*
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
-import androidx.lifecycle.LiveData
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.MutableLiveData
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
 import com.kakao.sdk.common.KakaoSdk
-import com.naver.maps.map.util.FusedLocationSource
+import com.naver.maps.map.e
 import kr.co.mapo.project_seoulmatcheap.R
+import kr.co.mapo.project_seoulmatcheap.data.db.AppDatabase
+import kr.co.mapo.project_seoulmatcheap.data.db.StoreEntity
+import java.lang.Math.*
 import java.util.*
+import kotlin.math.pow
 
 
 /**
@@ -29,6 +33,8 @@ import java.util.*
  * @created 2021-04-06
  * @desc 어플리케이션 클래스 -공통변수, 공통함수, 로케이션
  */
+
+private const val r = 6372.8 * 1000
 
 class SeoulMatCheap : Application() {
 
@@ -47,6 +53,8 @@ class SeoulMatCheap : Application() {
     var y = SEOULCITYHALL_Y     //경도
     val address = MutableLiveData<String>()
     val location = MutableLiveData<Location>()
+    var filterList = listOf<String>()
+    var storeList = listOf<StoreEntity>()
 
     init {
         this.address.value = SEOULCITYHALL_ADDRESS
@@ -60,6 +68,25 @@ class SeoulMatCheap : Application() {
         super.onCreate()
         //Kakao SDK 초기화
         KakaoSdk.init(this, getString(R.string.KAKAO_NATIVE_APP_KEY))
+        setAllActivitySettings()
+    }
+
+    /**
+     * 모든 액티비티를 수직화면으로 세팅
+     */
+    private fun setAllActivitySettings() {
+        registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
+            @SuppressLint("SourceLockedOrientationActivity")
+            override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
+                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            }
+            override fun onActivityStarted(activity: Activity) {}
+            override fun onActivityResumed(activity: Activity) {}
+            override fun onActivityPaused(activity: Activity) {}
+            override fun onActivityStopped(activity: Activity) {}
+            override fun onActivitySaveInstanceState(activity: Activity, bundle: Bundle) {}
+            override fun onActivityDestroyed(activity: Activity) {}
+        })
     }
 
     //토스트메세지 출력
@@ -69,54 +96,79 @@ class SeoulMatCheap : Application() {
 
     //GPS로부터 위치정보를 얻어오는 함수
     fun setLocation(context: Context) {
-        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        // LocationManager.GPS_PROVIDER 또는 LocationManager.NETWORK_PROVIDER 를 얻어온다.
-        val provider = locationManager.getBestProvider(Criteria(), true)
-        Log.e("[GPS0]", "$provider")
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
-            != PackageManager.PERMISSION_GRANTED) {
-            Toast.makeText(context, "위치정보를 사용할 수 없습니다.", Toast.LENGTH_SHORT).show()
-            return
-        }
-        if (provider == null) {
-            showToast(context, context.getString(R.string.gps_notice))
-            return
-        } else {
-            val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-            fusedLocationClient.lastLocation
-                .addOnSuccessListener { location : Location? ->
-                    locationManager.requestLocationUpdates(provider, 100, 1f, LocationListener {
-                        updateLocation(it, context)
-                    })
-                    /*
-                    if(location == null) {
-                        locationManager.requestLocationUpdates(provider, 400, 1f, LocationListener {
-                            updateLocation(it, context)
-                        })
-                    } else {
-                        updateLocation(location, context)
+        try {
+            val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+            // LocationManager.GPS_PROVIDER 또는 LocationManager.NETWORK_PROVIDER 를 얻어온다.
+            val provider = locationManager.getBestProvider(Criteria(), true)
+            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(context, "위치정보를 사용할 수 없습니다.", Toast.LENGTH_SHORT).show()
+                return
+            }
+            if (provider == null) {
+                showToast(context, context.getString(R.string.gps_notice))
+                return
+            } else {
+                val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+                fusedLocationClient.lastLocation
+                    .addOnSuccessListener { location: Location? ->
+                        if (location == null) {
+                            locationManager.requestLocationUpdates(provider, 400, 1f) {
+                                updateLocation(it, context)
+                            }
+                        } else {
+                            updateLocation(location, context)
+                            locationManager.requestLocationUpdates(provider, 400, 1f) {
+                                updateLocation(it, context)
+                            }
+                        }
                     }
-                     */
-                }
+            }
+        } catch (e : Exception) {
+            showToast(context, "GPS의 상태나 네트워크의 상태를 확인해주세요")
         }
     }
 
-    //위도, 경도로부터 주소를 계산하는 함수
+    //위도, 경도로부터 주소를 계산하는 함수 : 인터넷문제
     private fun updateLocation(location: Location, context: Context) {
         this.location.value = location
         this.x = location.latitude
         this.y = location.longitude
-        this.address.value = Geocoder(context, Locale.getDefault())
-            .getFromLocation(x, y, 1)[0]
-            .getAddressLine(0)
-            .substring(11)
-        Log.e("[GSP]", "$x, $y, ${address.value}")
+        //인터넷연결 불안정할시 Geocoder X
+       try {
+           val connectivityManager =
+               context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+           val capabilities =
+               connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+           if (capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true
+               || capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) == true
+           ) {
+               this.address.value = Geocoder(context, Locale.getDefault())
+                   .getFromLocation(x, y, 1)[0]
+                   .getAddressLine(0)
+                   .substring(11)
+           }
+       } catch (e : Exception) {
+           showToast(context, "네트워크나 GPS 상태가 불안정합니다.")
+       }
     }
 
-    //서울시인지 여부 판단하는 함수
-    fun adminArea(lat: Double, lng: Double, context: Context) : Boolean {
-        val address = Geocoder(context, Locale.getDefault()).getFromLocation(lat, lng, 1)[0]
-        return address.adminArea === SEOUL
+    //현재 위경도에서부터 떨어져 있는 거리 계산
+    fun calculateDistance(lat: Double, lng : Double) : String {
+        val a = 2 * asin(sqrt(sin(toRadians(lat - this.x) / 2).pow(2.0)
+                        + sin(toRadians(lng - this.y) / 2).pow(2.0) * cos(toRadians(this.x)) * cos(toRadians(lat))))
+        return String.format("%.1fkm", (r * a) / 1000)
     }
 
+    fun calculateDistanceDou(lat: Double, lng : Double) : Double {
+        val a = 2 * asin(sqrt(sin(toRadians(lat - this.x) / 2).pow(2.0)
+                + sin(toRadians(lng - this.y) / 2).pow(2.0) * cos(toRadians(this.x)) * cos(toRadians(lat))))
+        return (r * a) / 1000
+    }
+
+    fun getAutoComplete(context: Context, lifecycleOwner: LifecycleOwner) {
+        AppDatabase(context)!!.storeDAO().getAutoComplete().observe(lifecycleOwner, {
+            filterList = it
+        })
+    }
 }

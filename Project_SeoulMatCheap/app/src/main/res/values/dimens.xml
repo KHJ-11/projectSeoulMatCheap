@@ -17,6 +17,8 @@
     <dimen name="btn_clickiconwidth"> 60dp </dimen>
     <dimen name="btn_clickiconheight"> 20dp </dimen>
 
+    <dimen name="dialog_icon">120dp</dimen>
+
 
 
     <!--여백-->
@@ -64,6 +66,7 @@
     <dimen name="text_icon">15sp</dimen>
     <dimen name="permission_name">20dp</dimen>
     <dimen name="permission_text">15dp</dimen>
+    <dimen name="marketinfo_text">11sp</dimen>
 
     <!--Inform_02-->
     <dimen name="inform_image_heigh">250dp</dimen>

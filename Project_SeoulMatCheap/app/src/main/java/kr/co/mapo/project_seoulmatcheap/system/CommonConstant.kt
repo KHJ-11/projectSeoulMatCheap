@@ -7,6 +7,8 @@ package kr.co.mapo.project_seoulmatcheap.system
  * @desc const val 모음
  */
 
+const val APP_NAME = "서울맛칩"
+
 //업종
 const val SORT_HANSIK = "한식"
 const val SORT_CHINA = "중식"
@@ -20,6 +22,8 @@ const val SORT_STORE = "기타"
 //SharedPrefs
 const val SEARCH_HISTROY = "search_history_prefs"
 const val USER_PRESFS = "user_prefs"
+const val DOWNLOADSTORE = "download_store"
+const val DOWNLOADMENU = "download_menu"
 
 //서울시청
 const val SEOULCITYHALL_X = 37.5662952
@@ -28,11 +32,18 @@ const val SEOULCITYHALL_ADDRESS = "중구 세종대로 110 서울특별시청"
 const val SEOUL = "서울특별시"
 
 //지도
-const val MAP_ZOOM = 18.0
+const val MAP_ZOOM = 16.0
+const val MAP_MIN_ZOOM = 12.0
+const val MARKET_MIN_ZOOM = 13.0
 const val NOW_ICON_SIZE = 200
 const val MARKER_SIZE = 120
 
-//인텐트 이름
+//인텐트 Extra 이름
 const val ADDRESS = "address"
+const val LIST = "list"
+const val STORE = "store"
+const val KEY = "key"
+const val POSITION = "position"
+const val SORTEDLIST = "list"
 
 //파라미터 이름

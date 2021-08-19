@@ -1,16 +1,24 @@
 package kr.co.mapo.project_seoulmatcheap.ui.activity
 
+import android.content.Context
+import android.content.pm.PackageInfo
+import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Base64
 import android.util.Log
+import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.core.view.GravityCompat
 import com.google.android.material.tabs.TabLayout
 import kr.co.mapo.project_seoulmatcheap.R
+import kr.co.mapo.project_seoulmatcheap.data.db.AppDatabase
 import kr.co.mapo.project_seoulmatcheap.databinding.ActivityMainBinding
 import kr.co.mapo.project_seoulmatcheap.system.SeoulMatCheap
 import kr.co.mapo.project_seoulmatcheap.system.UserPrefs
 import kr.co.mapo.project_seoulmatcheap.ui.fragment.*
+import java.security.MessageDigest
+import java.security.NoSuchAlgorithmException
 
 class MainActivity : AppCompatActivity() {
 
@@ -31,6 +39,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun init() {
         val seoulMatCheap = SeoulMatCheap.getInstance()
+        AppDatabase(this)!!.storeDAO().getAllStore().observe(this, {
+            seoulMatCheap.storeList = it
+        })
+        seoulMatCheap.getAutoComplete(this, this)
         seoulMatCheap.setLocation(this)
         setView()
     }
@@ -49,15 +61,13 @@ class MainActivity : AppCompatActivity() {
                         supportFragmentManager.beginTransaction()
                             .replace(R.id.container, SEARCH_01.newInstance(this@MainActivity))
                             .commit()
+                        //키보드 올리기
+                        val inputManager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                        inputManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY)
                     }
                     R.id.main -> {
                         supportFragmentManager.beginTransaction()
                             .replace(R.id.container, CATEGORY_01(this@MainActivity))
-                            .commit()
-                    }
-                    R.id.mat -> {
-                        supportFragmentManager.beginTransaction()
-                            .replace(R.id.container, MATCHEAP_01())
                             .commit()
                     }
                     R.id.my -> {

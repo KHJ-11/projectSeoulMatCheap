@@ -21,13 +21,15 @@
     <color name="skyBlue">#57A8D8</color>
     <color name="yellow">#FBC02D</color>
 
+    <color name="button2">#feeeeb</color>
+    <color name="button1">#b80b14</color>
     <color name="main">#F25D3D</color>
     <color name="divide">#f1f1f1</color>
     <color name="divide2">#e1e1e1</color>
 
     <!--CATEGORY_01_03-->
     <color name="transparent">#1A000000</color>
-    <color name="transparentcolor">#8B42AFDA</color>
+    <color name="transparentcolor">#FFFFFF</color>
 
     <!--MAP_01-->
     <color name="map_circle">#1AF25D3D</color>

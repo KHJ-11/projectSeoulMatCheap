@@ -13,16 +13,21 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Filter
-import android.widget.Filterable
-import android.widget.LinearLayout
-import android.widget.TextView
+import android.view.inputmethod.InputMethodManager
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.naver.maps.map.a.f
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import kr.co.mapo.project_seoulmatcheap.R
+import kr.co.mapo.project_seoulmatcheap.data.db.AppDatabase
 import kr.co.mapo.project_seoulmatcheap.system.SEARCH_HISTROY
+import kr.co.mapo.project_seoulmatcheap.system.SearchHistoryPrefs
+import kr.co.mapo.project_seoulmatcheap.system.SeoulMatCheap
 import kr.co.mapo.project_seoulmatcheap.ui.fragment.SEARCH_01_01
+import kr.co.mapo.project_seoulmatcheap.ui.fragment.SEARCH_01_02
 
 /**
  * @author SANDY
@@ -31,11 +36,11 @@ import kr.co.mapo.project_seoulmatcheap.ui.fragment.SEARCH_01_01
  * @desc 자동완성 리사이클러뷰 어댑터
  */
 class AutoCompleteAdapter(
-    private val unfilteredlist: ArrayList<String>,
+    private val unfilteredlist: List<String>,
     private val owner : AppCompatActivity
     ) : RecyclerView.Adapter<AutoCompleteAdapter.ViewHolder>(), Filterable {
 
-    private var filteredList : ArrayList<String> = unfilteredlist
+    private var filteredList : List<String> = unfilteredlist
     private var constraint: String = ""
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -43,9 +48,16 @@ class AutoCompleteAdapter(
         fun changeTextColor(constraint : String) {
             val start = word.text.indexOf(constraint)
             val end = if (constraint.isNotEmpty()) start + constraint.length else 0
-            (word.text as Spannable).apply {
-                setSpan(ForegroundColorSpan(owner.getColor(R.color.main)), start, end, Spanned.SPAN_EXCLUSIVE_INCLUSIVE)
-                setSpan(StyleSpan(Typeface.BOLD), start, end, Spanned.SPAN_EXCLUSIVE_INCLUSIVE)
+            if(start >= 0 && end >=0) {
+                (word.text as Spannable).apply {
+                    setSpan(
+                        ForegroundColorSpan(owner.getColor(R.color.main)),
+                        start,
+                        end,
+                        Spanned.SPAN_EXCLUSIVE_INCLUSIVE
+                    )
+                    setSpan(StyleSpan(Typeface.BOLD), start, end, Spanned.SPAN_EXCLUSIVE_INCLUSIVE)
+                }
             }
         }
     }
@@ -67,12 +79,26 @@ class AutoCompleteAdapter(
             word.text = filteredList[position]
             changeTextColor(constraint)
             itemView.setOnClickListener {
-                val edit = owner.getSharedPreferences(SEARCH_HISTROY, Application.MODE_PRIVATE).edit()
-                edit.putString("word.text", word.text.toString().trim()).apply()
-                owner.supportFragmentManager
-                    .beginTransaction()
-                    .replace(R.id.container, SEARCH_01_01.newInstance(owner, word.text.toString()))
-                    .commit()
+                //검색요청
+                val searchWord = word.text.toString().trim()
+                SeoulMatCheap.getInstance().showToast(owner, "${searchWord}(을)를 검색합니다.")
+                SearchHistoryPrefs.saveSearchWord(owner, searchWord)
+                GlobalScope.launch(Dispatchers.IO) {
+                    val list = AppDatabase(owner)!!.storeDAO().searchStore("%$searchWord%")
+                    if(list.isNotEmpty()) { //검색성공
+                        owner.supportFragmentManager
+                            .beginTransaction()
+                            .replace(R.id.container, SEARCH_01_01.newInstance(owner, searchWord, list))
+                            .commit()
+                        } else {    //검색실패
+                        owner.supportFragmentManager
+                            .beginTransaction()
+                            .replace(R.id.container, SEARCH_01_02.newInstance(owner, searchWord))
+                            .commit()
+                    }
+                }
+                val inputManager = owner.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                inputManager.hideSoftInputFromWindow(owner.currentFocus?.windowToken, 0)
             }
         }
     }

@@ -1,35 +1,45 @@
 package kr.co.mapo.project_seoulmatcheap.ui.activity
 
 import android.Manifest
+import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.MenuItem
+import android.view.MotionEvent
 import android.view.View
-import android.view.ViewGroup
 import android.widget.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
+import com.willy.ratingbar.BaseRatingBar
+import com.willy.ratingbar.ScaleRatingBar
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import kr.co.mapo.project_seoulmatcheap.R
+import kr.co.mapo.project_seoulmatcheap.data.MatCheapService
+import kr.co.mapo.project_seoulmatcheap.data.ReviewBody
+import kr.co.mapo.project_seoulmatcheap.databinding.ActivityInform020201Binding
 import kr.co.mapo.project_seoulmatcheap.databinding.ActivityInform0202Binding
-import java.lang.Float
+import okhttp3.MediaType
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
+import org.json.JSONObject
+import retrofit2.http.Multipart
+import java.io.File
 
 class INFORM_02_02 : AppCompatActivity() {
-    private lateinit var recyclerView: RecyclerView
+
     private lateinit var binding: ActivityInform0202Binding
     private val OPEN_GALLERY = 1
-    private lateinit var ratingscore : TextView
-    private lateinit var ratingBar: RatingBar
-    var str: String? = null
-
-
-
+    private lateinit var ratingscore: TextView
+    private lateinit var ratingBar: ScaleRatingBar
+    private var str: String? = null
+    private var currentImageURI : String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
@@ -37,9 +47,6 @@ class INFORM_02_02 : AppCompatActivity() {
         binding = ActivityInform0202Binding.inflate(layoutInflater)
         setContentView(binding.root)
         setSupportActionBar(binding.toolbar)
-        recyclerView = findViewById(R.id.recyclerView2)
-        recyclerView.layoutManager =
-            LinearLayoutManager(this@INFORM_02_02, LinearLayoutManager.HORIZONTAL, false)
 
         binding.btnComplete.setOnClickListener {
             val mLogoutView =
@@ -53,10 +60,29 @@ class INFORM_02_02 : AppCompatActivity() {
 
 
             okButton.setOnClickListener {
-                Toast.makeText(this, "리뷰 쓰기 성공", Toast.LENGTH_SHORT).show()
-
+                val file = File(currentImageURI)
+                val input_json = JSONObject()
+                input_json.put("memberId", 28)
+                input_json.put("storeId", 9220)
+                input_json.put("reviewContent", "되었으면 좋겟다아아")
+                input_json.put("reviewWriter", "test 입력자")
+                input_json.put("reviewModifier", "test 수정자")
                 //화면이동 INFORM_02_01로. 가게이름의 정보를 가진채로.
-
+                val input_body = RequestBody.create(MediaType.parse("text/plain"), input_json.toString())
+                val files_body = RequestBody.create(MediaType.parse("image/*"), file)
+                val files =
+                    MultipartBody.Part.createFormData("files", file.name, files_body)
+                val input = MultipartBody.Part.createFormData("input", input_json.toString())
+                MatCheapService.invoke(this).writeReview(
+                    input, files
+                ).subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe({
+                        Toast.makeText(this, "리뷰 작성 성공", Toast.LENGTH_SHORT).show()
+                        Log.e("[결과]", "성공")
+                    },{
+                        Log.e("[결과]", "실패")
+                    })
                 mAlertDialog.dismiss()
             }
             cancelButton.setOnClickListener {
@@ -72,14 +98,30 @@ class INFORM_02_02 : AppCompatActivity() {
         }
         ratingBar = findViewById(R.id.ratingBar)
         ratingscore = findViewById(R.id.ratingscore)
-        ratingBar.onRatingBarChangeListener =
-            RatingBar.OnRatingBarChangeListener { _, rating, _ ->
-                str = rating.toString()
-                ratingscore.text = str
+        ratingBar.setOnRatingChangeListener { ScaleRatingBar, rating, _ ->
+            str = rating.toString()
+            ratingscore.text = str
+        }
+
+        binding.imageselectlayout.setOnClickListener {
+            openGallery()
+        }
+
+        binding.textView.setOnTouchListener(View.OnTouchListener { v, event ->
+            if (binding.textView.hasFocus()) {
+                v.parent.requestDisallowInterceptTouchEvent(true)
+                when (event.action and MotionEvent.ACTION_MASK) {
+                    MotionEvent.ACTION_SCROLL -> {
+                        v.parent.requestDisallowInterceptTouchEvent(false)
+                        return@OnTouchListener true
+                    }
+                }
             }
+            false
+        })
     }
 
-    fun openGallary(v: View) {
+    private fun openGallery(){
         val writePermission =
             ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
         val readPermission =
@@ -95,10 +137,8 @@ class INFORM_02_02 : AppCompatActivity() {
                 ), 100
             )
         } else { // 권한 있음
-            val intent = Intent(Intent.ACTION_PICK).apply {
+            val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
                 type = "image/*"
-                data = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-                putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
             }
             startActivityForResult(intent, OPEN_GALLERY)
         }
@@ -115,57 +155,21 @@ class INFORM_02_02 : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        val list = mutableListOf<Uri>().apply {
-            if (requestCode == OPEN_GALLERY) {
-                if (data?.clipData == null) {
-                    if (data != null) {
-                        this.add(Uri.parse(data.dataString))
-                    }
-                } else {
-                    for (i in 0 until data.clipData!!.itemCount) {
-                        this.add(data.clipData!!.getItemAt(i).uri)
-                        if (data.clipData!!.itemCount > 3) {
-                            Toast.makeText(
-                                applicationContext,
-                                "사진은 최대 3개까지 가능합니다.",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                        binding.scrollView.visibility = View.GONE
-                    }
+
+        if(resultCode == Activity.RESULT_OK){
+            if(requestCode == OPEN_GALLERY){
+                currentImageURI = data?.data.toString()
+                try {
+                    binding.imageView18.setImageURI(data?.data)
+                }catch (e:Exception){
+                    e.printStackTrace()
                 }
             }
+        }else{
+            Log.d("ActivityResult","something wrong")
         }
-        recyclerView.adapter = MultiImageAdapter(list)
-    }
-
-    inner class MultiImageAdapter(private val list: List<Uri>) :
-        RecyclerView.Adapter<MultiImageAdapter.HolderView>() {
-
-        inner class HolderView(itemView: View) : RecyclerView.ViewHolder(itemView) {
-            val imageView: ImageView = itemView.findViewById(R.id.reviewitem)
-        }
-
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HolderView {
-            return HolderView(
-                LayoutInflater.from(parent.context)
-                    .inflate(R.layout.multi_image_item, parent, false)
-            )
-        }
-
-        override fun onBindViewHolder(holder: HolderView, position: Int) {
-            holder.imageView.setImageURI(list[position])
-        }
-
-        override fun getItemCount(): Int {
-            if (list.size > 3) {
-                return 3
-            }
-            return list.size
-        }
-
-
     }
 
 }
+
 
