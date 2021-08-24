@@ -14,6 +14,7 @@
 * 마이페이지
 ---
 ## [ Preview ]
+[서울 맛칩.pdf](https://github.com/KHJ-11/projectSeoulMatCheap/blob/main/%EC%84%9C%EC%9A%B8%EB%A7%9B%EC%B9%A9.pdf)
 ![2](https://user-images.githubusercontent.com/72050086/130629444-1d13a4d1-cf4e-41fd-8939-9096b2bd534a.PNG)
 ![1](https://user-images.githubusercontent.com/72050086/130629437-62ce8f4c-3e2e-4a7f-a045-ae975061bc18.PNG)
 ---
