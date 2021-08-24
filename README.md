@@ -14,7 +14,8 @@
 * 마이페이지
 ---
 ## [ Preview ]
-
+![2](https://user-images.githubusercontent.com/72050086/130629444-1d13a4d1-cf4e-41fd-8939-9096b2bd534a.PNG)
+![1](https://user-images.githubusercontent.com/72050086/130629437-62ce8f4c-3e2e-4a7f-a045-ae975061bc18.PNG)
 ---
 ## [ 개발환경 ]
 * Language : Kotlin
