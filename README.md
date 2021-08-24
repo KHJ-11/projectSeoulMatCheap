@@ -1,7 +1,7 @@
 # SeoulMatCheap
 #### 개발기간 : 2021년 03월 08일 ~ 2021년 05월 28일
 ---
-## [ 개요 ]
+### [ 개요 ]
 
 **서울의 착한가격업소에 대한 정보를 제공하는 모바일 서비스**
 
@@ -13,19 +13,19 @@
 * 지역별, 카테고리별 탐색
 * 마이페이지
 ---
-## [ Preview ]
+### [ Preview ]
 [서울 맛칩.pdf](https://github.com/KHJ-11/projectSeoulMatCheap/blob/main/%EC%84%9C%EC%9A%B8%EB%A7%9B%EC%B9%A9.pdf)
 
 ![2](https://user-images.githubusercontent.com/72050086/130629444-1d13a4d1-cf4e-41fd-8939-9096b2bd534a.PNG)
 ![1](https://user-images.githubusercontent.com/72050086/130629437-62ce8f4c-3e2e-4a7f-a045-ae975061bc18.PNG)
 ---
-## [ 개발환경 ]
+### [ 개발환경 ]
 * Language : Kotlin
 * Front-end : Android studio
 * back-end : Spring boot, mySql, Aws, IntelliJ
 * Design : Xd, Ps, Ai
 ---
-## [ 라이브러리 ]
+### [ 라이브러리 ]
 * NaverMap
 * Retrofit2
 * rxjava2
